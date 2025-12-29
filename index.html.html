@@ -1,0 +1,331 @@
+<!DOCTYPE html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Habit Tracker App</title>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Service Worker -->
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
+<style>
+:root{
+  --bg:#f4f6f8;
+  --text:#000;
+  --card:#fff;
+  --primary:#4CAF50;
+}
+body.dark{
+  --bg:#121212;
+  --text:#eee;
+  --card:#1e1e1e;
+}
+body{
+  margin:0;
+  padding:10px;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial, sans-serif;
+}
+h2{text-align:center;color:var(--primary);}
+button{
+  padding:6px 10px;
+  margin:4px;
+  border:none;
+  border-radius:5px;
+  background:var(--primary);
+  color:#fff;
+  cursor:pointer;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:var(--card);
+  font-size:13px;
+}
+th,td{
+  border:1px solid #aaa;
+  padding:4px;
+  text-align:center;
+}
+th{background:#ddd;}
+input[type=checkbox]{
+  transform:scale(1.2);
+  accent-color:var(--primary);
+}
+.progress,.streak{font-weight:bold;}
+.controls{text-align:center;margin-bottom:8px;}
+@media(max-width:768px){
+  table{font-size:11px;}
+}
+</style>
+</head>
+
+<body>
+
+<h2>🔥 Habit Tracker</h2>
+
+<div class="controls">
+<button onclick="toggleDark()">🌙 Dark</button>
+<button onclick="exportCSV()">⬇ Excel</button>
+<button onclick="window.print()">🖨 PDF</button>
+<button onclick="resetMonth()">♻ Reset</button>
+</div>
+
+<table id="table">
+<thead>
+<tr>
+<th>Habit</th>
+<script>
+for(let i=1;i<=31;i++){
+  document.write("<th>"+i+"</th>");
+}
+</script>
+<th>%</th>
+<th>🔥</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<script>
+const habits=["Wake Early","Exercise","Reading","Meditation"];
+
+const monthKey=new Date().getFullYear()+"-"+(new Date().getMonth()+1);
+const STORAGE="HABIT_"+monthKey;
+const saved=JSON.parse(localStorage.getItem(STORAGE))||{};
+const tbody=document.querySelector("tbody");
+
+habits.forEach((h,i)=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML="<td>"+h+"</td>";
+  for(let d=0;d<31;d++){
+    const cb=document.createElement("input");
+    cb.type="checkbox";
+    if(saved[i]?.[d])cb.checked=true;
+    cb.onchange=()=>{save();update(tr)};
+    const td=document.createElement("td");
+    td.appendChild(cb);
+    tr.appendChild(td);
+  }
+  tr.innerHTML+=<td class="progress"></td><td class="streak"></td>;
+  tbody.appendChild(tr);
+  update(tr);
+});
+
+function update(row){
+  const cbs=row.querySelectorAll("input");
+  let done=0,streak=0,temp=0;
+  cbs.forEach(cb=>{
+    if(cb.checked){done++;temp++;streak=Math.max(streak,temp);}
+    else temp=0;
+  });
+  row.querySelector(".progress").innerText=Math.round(done/31*100)+"%";
+  row.querySelector(".streak").innerText="🔥 "+streak;
+}
+
+function save(){
+  const data={};
+  [...tbody.children].forEach((r,i)=>{
+    data[i]=[...r.querySelectorAll("input")].map(cb=>cb.checked);
+  });
+  localStorage.setItem(STORAGE,JSON.stringify(data));
+}
+
+function resetMonth(){
+  if(confirm("Reset this month?")){
+    localStorage.removeItem(STORAGE);
+    location.reload();
+  }
+}
+
+function toggleDark(){
+  document.body.classList.toggle("dark");
+}
+
+function exportCSV(){
+  let csv="Habit,Day,Done\n";
+  habits.forEach((h,i)=>{
+    saved[i]?.forEach((v,d)=>{
+      csv+=${h},${d+1},${v?"Yes":"No"}\n;
+    });
+  });
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="habit-tracker.csv";
+  a.click();
+}
+</script>
+
+</body>
+</html>
+<html lang="en">
+<head>
+<link rel="manifest" href="manifest.json">
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+<meta charset="UTF-8">
+<title>Ultimate Habit Tracker</title>
+
+<style>
+:root {
+  --bg:#f4f6f8;
+  --text:#000;
+  --card:#fff;
+  --primary:#4CAF50;
+}
+.dark {
+  --bg:#121212;
+  --text:#eee;
+  --card:#1e1e1e;
+  --primary:#81c784;
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial, sans-serif;
+  padding:10px;
+}
+h2{text-align:center;color:var(--primary);}
+button{
+  padding:6px 12px;
+  margin:5px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  background:var(--primary);
+  color:#fff;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:var(--card);
+  font-size:13px;
+}
+th,td{
+  border:1px solid #aaa;
+  padding:4px;
+  text-align:center;
+}
+th{background:#ddd;}
+input[type=checkbox]{
+  transform:scale(1.2);
+  accent-color:var(--primary);
+}
+.progress,.streak{font-weight:bold;}
+.controls{text-align:center;margin-bottom:10px;}
+@media(max-width:768px){
+  table{font-size:11px;}
+}
+</style>
+</head>
+
+<body>
+<h2>🔥 Ultimate Habit Tracker</h2>
+
+<div class="controls">
+<button onclick="toggleDark()">🌙 Dark Mode</button>
+<button onclick="exportCSV()">⬇ Export Excel</button>
+<button onclick="window.print()">🖨 PDF</button>
+<button onclick="resetMonth()">♻ Reset Month</button>
+</div>
+
+<table id="table">
+<thead>
+<tr>
+<th>Habit</th>
+<script>for(let i=1;i<=31;i++)document.write("<th>"+i+"</th>")</script>
+<th>%</th>
+<th>🔥 Streak</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<script>
+/* ===== CUSTOMIZE HABITS ===== */
+const habits=["Wake Early","Exercise","Reading","Meditation"];
+
+/* ===== STORAGE ===== */
+const monthKey=new Date().getFullYear()+"-"+(new Date().getMonth()+1);
+const STORAGE="HABIT_"+monthKey;
+const data=JSON.parse(localStorage.getItem(STORAGE))||{};
+const tbody=document.querySelector("tbody");
+
+/* ===== BUILD TABLE ===== */
+habits.forEach((h,i)=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML="<td>"+h+"</td>";
+  for(let d=0;d<31;d++){
+    const cb=document.createElement("input");
+    cb.type="checkbox";
+    if(data[i]?.[d])cb.checked=true;
+    cb.onchange=()=>{save();update(tr)};
+    const td=document.createElement("td");
+    td.appendChild(cb);
+    tr.appendChild(td);
+  }
+  tr.innerHTML+=<td class="progress"></td><td class="streak"></td>;
+  tbody.appendChild(tr);
+  update(tr);
+});
+
+/* ===== FUNCTIONS ===== */
+function update(row){
+  const cbs=row.querySelectorAll("input");
+  let done=0,streak=0,temp=0;
+  cbs.forEach(cb=>{
+    if(cb.checked){done++;temp++;streak=Math.max(streak,temp);}
+    else temp=0;
+  });
+  row.querySelector(".progress").innerText=Math.round(done/31*100)+"%";
+  row.querySelector(".streak").innerText="🔥 "+streak;
+}
+
+function save(){
+  const obj={};
+  [...tbody.children].forEach((r,i)=>{
+    obj[i]=[...r.querySelectorAll("input")].map(cb=>cb.checked);
+  });
+  localStorage.setItem(STORAGE,JSON.stringify(obj));
+}
+
+function resetMonth(){
+  if(confirm("Reset this month?")){
+    localStorage.removeItem(STORAGE);
+    location.reload();
+  }
+}
+
+function toggleDark(){
+  document.body.classList.toggle("dark");
+}
+
+function exportCSV(){
+  let csv="Habit,Day,Done\n";
+  habits.forEach((h,i)=>{
+    data[i]?.forEach((v,d)=>{
+      csv+=${h},${d+1},${v?"Yes":"No"}\n;
+    });
+  });
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="habit-tracker.csv";
+  a.click();
+}
+</script>
+
+</body>
+</html>
